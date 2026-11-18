@@ -173,21 +173,21 @@ describe('ResponseViewer', () => {
     });
 
     it('should handle circular object in formatBody (defensive)', () => {
-        const spy = vi.spyOn(JSON, 'stringify').mockImplementation(() => { throw new Error('Circular'); });
+        // Create a circular object to test defensive handling when JSON.stringify fails
+        const circular: any = { a: 1 };
+        circular.self = circular;
 
         runInAction(() => {
             requestStore.response = {
                 status: 200,
                 statusText: 'OK',
-                data: { a: 1 },
+                data: circular,
                 headers: {}
             };
         });
         render(<ResponseViewer />);
         // It catches and returns content.toString(). Object toString is [object Object]
         expect(screen.getByDisplayValue('[object Object]')).toBeInTheDocument();
-
-        spy.mockRestore();
     });
 
     it('should handle null data', () => {
