@@ -130,4 +130,53 @@ describe('TabList', () => {
         render(<TabList />);
         expect(screen.getAllByTitle('New Request').length).toBe(6);
     });
+
+    describe('keyboard and screen reader support', () => {
+        const twoTabs = () => {
+            runInAction(() => {
+                requestStore.addTab();
+                requestStore.addTab();
+            });
+            render(<TabList />);
+            return screen.getAllByRole('tab');
+        };
+
+        it('exposes tabs with the selected state and a single tab stop', () => {
+            const tabs = twoTabs();
+            const [first, second] = [requestStore.tabs[0].id, requestStore.tabs[1].id];
+            fireEvent.click(tabs[0]);
+            expect(requestStore.activeTabId).toBe(first);
+            expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+            expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+            expect(tabs[0]).toHaveAttribute('tabindex', '0');
+            expect(tabs[1]).toHaveAttribute('tabindex', '-1');
+            expect(second).not.toBe(first);
+        });
+
+        it('activates a tab with Enter and Space', () => {
+            const tabs = twoTabs();
+            fireEvent.keyDown(tabs[1], { key: 'Enter' });
+            expect(requestStore.activeTabId).toBe(requestStore.tabs[1].id);
+            fireEvent.keyDown(tabs[0], { key: ' ' });
+            expect(requestStore.activeTabId).toBe(requestStore.tabs[0].id);
+        });
+
+        it('moves between tabs with the arrow keys, wrapping around', () => {
+            const tabs = twoTabs();
+            fireEvent.click(tabs[0]);
+            fireEvent.keyDown(tabs[0], { key: 'ArrowRight' });
+            expect(requestStore.activeTabId).toBe(requestStore.tabs[1].id);
+            expect(document.activeElement).toBe(tabs[1]);
+            fireEvent.keyDown(tabs[1], { key: 'ArrowRight' });
+            expect(requestStore.activeTabId).toBe(requestStore.tabs[0].id);
+        });
+
+        it('closes, duplicates and adds through real, named buttons', () => {
+            twoTabs();
+            expect(screen.getAllByRole('button', { name: 'Close tab' })).toHaveLength(2);
+            expect(screen.getAllByRole('button', { name: 'Duplicate tab' })).toHaveLength(2);
+            fireEvent.click(screen.getByRole('button', { name: 'New request' }));
+            expect(requestStore.tabs).toHaveLength(3);
+        });
+    });
 });
