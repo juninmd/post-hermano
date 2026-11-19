@@ -11,13 +11,16 @@ export interface RequestData {
     queryParams: QueryParam[];
 }
 
+// Inside double quotes the shell still expands \ " $ and backticks: escape them so a pasted command stays literal.
+const shDq = (value: string): string => value.replace(/[\\"$`]/g, '\\$&');
+
 export const generateCurl = (request: RequestData): string => {
-    let curl = `curl -X ${request.method} "${request.url}"`;
+    let curl = `curl -X ${request.method} "${shDq(request.url)}"`;
 
     // Headers
     request.headers.forEach(h => {
         if (h.key && h.value) {
-            curl += ` \\\n  -H "${h.key}: ${h.value}"`;
+            curl += ` \\\n  -H "${shDq(`${h.key}: ${h.value}`)}"`;
         }
     });
 
@@ -32,13 +35,13 @@ export const generateCurl = (request: RequestData): string => {
         } else if (request.bodyType === 'x-www-form-urlencoded') {
             request.bodyUrlEncoded.forEach(item => {
                 if (item.key) {
-                    curl += ` \\\n  --data-urlencode "${item.key}=${item.value}"`;
+                    curl += ` \\\n  --data-urlencode "${shDq(`${item.key}=${item.value}`)}"`;
                 }
             });
         } else if (request.bodyType === 'form-data') {
             request.bodyFormData.forEach(item => {
                 if (item.key) {
-                    curl += ` \\\n  -F "${item.key}=${item.value}"`;
+                    curl += ` \\\n  -F "${shDq(`${item.key}=${item.value}`)}"`;
                 }
             });
         }
@@ -91,10 +94,10 @@ export const generateFetch = (request: RequestData): string => {
         }
     }
 
-    let code = `fetch("${request.url}", {\n`;
+    let code = `fetch(${JSON.stringify(request.url)}, {\n`;
 
     // Method
-    code += `  method: "${request.method}",\n`;
+    code += `  method: ${JSON.stringify(request.method)},\n`;
 
     // Headers
     if (Object.keys(options.headers).length > 0) {
@@ -106,7 +109,7 @@ export const generateFetch = (request: RequestData): string => {
         // Form data preamble
         let preamble = `const formdata = new FormData();\n`;
         request.bodyFormData.filter(i => i.key).forEach(item => {
-            preamble += `formdata.append("${item.key}", "${item.value}");\n`;
+            preamble += `formdata.append(${JSON.stringify(item.key)}, ${JSON.stringify(item.value)});\n`;
         });
         return preamble + "\n" + code + `  body: formdata\n})`;
     }
