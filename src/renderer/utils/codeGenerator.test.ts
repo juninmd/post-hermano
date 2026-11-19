@@ -229,3 +229,33 @@ describe('generateFetch', () => {
         expect(code).toContain('body: "{invalid}"');
     });
 });
+
+describe('escaping of special characters', () => {
+    it('curl keeps $, backticks, quotes and backslashes literal inside double quotes', () => {
+        const req: RequestData = {
+            ...baseRequest,
+            url: 'http://example.com/?q=$(id)&n=`x`',
+            headers: [{ key: 'X-Token', value: 'a"b\\c$HOME' }],
+            method: 'POST',
+            bodyType: 'x-www-form-urlencoded',
+            bodyUrlEncoded: [{ key: 'k', value: '"$(whoami)"' }]
+        };
+        const code = generateCurl(req);
+        expect(code).toContain('"http://example.com/?q=\\$(id)&n=\\`x\\`"');
+        expect(code).toContain('-H "X-Token: a\\"b\\\\c\\$HOME"');
+        expect(code).toContain('--data-urlencode "k=\\"\\$(whoami)\\""');
+    });
+
+    it('fetch output stays valid JavaScript when url or form fields contain quotes', () => {
+        const req: RequestData = {
+            ...baseRequest,
+            url: 'http://example.com/?q="x"',
+            method: 'POST',
+            bodyType: 'form-data',
+            bodyFormData: [{ key: 'na"me', value: 'va"lue\nline' }]
+        };
+        const code = generateFetch(req);
+        expect(() => new Function(code)).not.toThrow();
+        expect(code).toContain('formdata.append("na\\"me", "va\\"lue\\nline");');
+    });
+});
