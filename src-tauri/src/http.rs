@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, sync::Mutex, time::{Duration, Instant}};
 
-use reqwest::{multipart, Client, Method};
+use reqwest::{header::HeaderMap, multipart, Client, Method};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use tokio::sync::oneshot;
@@ -70,6 +70,22 @@ impl Default for Requests {
     }
 }
 
+/// Repeated headers (e.g. `Set-Cookie`) are joined with ", " instead of the last one winning,
+/// and non-ASCII values are kept (lossy) instead of being blanked.
+fn collect_headers(map: &HeaderMap) -> HashMap<String, String> {
+    let mut out: HashMap<String, String> = HashMap::new();
+    for (k, v) in map.iter() {
+        let value = String::from_utf8_lossy(v.as_bytes());
+        out.entry(k.as_str().to_string())
+            .and_modify(|cur| {
+                cur.push_str(", ");
+                cur.push_str(&value);
+            })
+            .or_insert_with(|| value.into_owned());
+    }
+    out
+}
+
 async fn execute(client: &Client, r: RequestData) -> Result<ResponseData, String> {
     let method = Method::from_bytes(r.method.to_uppercase().as_bytes()).map_err(|e| e.to_string())?;
     let mut url = r.url.trim().to_string();
@@ -108,11 +124,7 @@ async fn execute(client: &Client, r: RequestData) -> Result<ResponseData, String
     let res = req.send().await.map_err(|e| e.to_string())?;
     let ttfb_ms = started.elapsed().as_millis() as u64;
     let status = res.status();
-    let headers = res
-        .headers()
-        .iter()
-        .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
-        .collect();
+    let headers = collect_headers(res.headers());
     let body = res.text().await.map_err(|e| e.to_string())?;
     let download_ms = (started.elapsed().as_millis() as u64).saturating_sub(ttfb_ms);
     Ok(ResponseData {
@@ -150,4 +162,21 @@ pub fn cancel_request(request_id: String, state: State<'_, Requests>) -> bool {
         .remove(&request_id)
         .map(|tx| tx.send(()).is_ok())
         .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use reqwest::header::HeaderValue;
+
+    #[test]
+    fn repeated_headers_are_joined_and_non_ascii_values_kept() {
+        let mut map = HeaderMap::new();
+        map.append("set-cookie", HeaderValue::from_static("a=1"));
+        map.append("set-cookie", HeaderValue::from_static("b=2"));
+        map.append("x-name", HeaderValue::from_bytes("caf\u{e9}".as_bytes()).unwrap());
+        let out = collect_headers(&map);
+        assert_eq!(out["set-cookie"], "a=1, b=2");
+        assert_eq!(out["x-name"], "caf\u{e9}");
+    }
 }
