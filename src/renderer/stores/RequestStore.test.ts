@@ -593,6 +593,20 @@ describe('RequestStore', () => {
           }));
       });
 
+      it('keeps an environment variable in a query API Key resolvable', async () => {
+          mockMakeRequest.mockResolvedValue({ data: '' });
+          store.setAuth({
+              type: 'apikey',
+              apiKey: { key: 'api_key', value: '{{apiKey}}', addTo: 'query' }
+          });
+          store.setUrl('http://example.com');
+          await store.sendRequest();
+
+          expect(mockMakeRequest).toHaveBeenCalledWith(expect.objectContaining({
+              url: 'http://example.com?api_key={{apiKey}}'
+          }));
+      });
+
       it('should append API Key to existing query params', async () => {
           mockMakeRequest.mockResolvedValue({ data: '' });
           store.setAuth({
