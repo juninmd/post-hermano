@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction, autorun } from 'mobx';
+import { base64Utf8 } from '../utils/base64';
 
 export interface Header {
   key: string;
@@ -160,7 +161,7 @@ export class RequestTab {
     let newHeaders = this.headers.filter(h => h.key.toLowerCase() !== 'authorization');
 
     if (this.auth.type === 'basic') {
-      const token = btoa(`${this.auth.username || ''}:${this.auth.password || ''}`);
+      const token = base64Utf8(`${this.auth.username || ''}:${this.auth.password || ''}`);
       newHeaders.unshift({ key: 'Authorization', value: `Basic ${token}` });
     } else if (this.auth.type === 'bearer') {
       newHeaders.unshift({ key: 'Authorization', value: `Bearer ${this.auth.token || ''}` });
