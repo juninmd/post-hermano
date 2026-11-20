@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { requestStore } from '../stores/RequestStore';
 import { generateCurl, generateFetch, RequestData } from '../utils/codeGenerator';
 import { observer } from 'mobx-react-lite';
+import { base64Utf8 } from '../utils/base64';
 
 const Overlay = styled.div`
   position: fixed;
@@ -110,7 +111,7 @@ export const CodeSnippetModal = observer(({ onClose }: Props) => {
       let finalUrl = url;
 
       if (auth.type === 'basic') {
-          const token = btoa(`${auth.username || ''}:${auth.password || ''}`);
+          const token = base64Utf8(`${auth.username || ''}:${auth.password || ''}`);
           finalHeaders.push({ key: 'Authorization', value: `Basic ${token}` });
       } else if (auth.type === 'bearer') {
           finalHeaders.push({ key: 'Authorization', value: `Bearer ${auth.token || ''}` });

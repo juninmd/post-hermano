@@ -124,6 +124,13 @@ describe('RequestStore', () => {
           expect(store.headers.some(h => h.key === 'Authorization')).toBe(false);
       });
 
+      it('encodes basic auth credentials as UTF-8 (accents, symbols)', () => {
+          expect(() => store.setAuth({ type: 'basic', username: 'joão', password: '€uro' })).not.toThrow();
+          const authHeader = store.headers.find(h => h.key === 'Authorization');
+          // Buffer is the reference UTF-8 + base64 implementation
+          expect(authHeader?.value).toBe('Basic ' + Buffer.from('joão:€uro', 'utf8').toString('base64'));
+      });
+
       it('should handle basic auth without username/password', () => {
           store.setAuth({ type: 'basic' });
           const authHeader = store.headers.find(h => h.key === 'Authorization');
