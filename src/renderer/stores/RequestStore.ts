@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction, autorun } from 'mobx';
+import { appendQueryParam } from '../utils/queryParam';
 import { base64Utf8 } from '../utils/base64';
 
 export interface Header {
@@ -750,8 +751,7 @@ export class RequestStore {
           if (tab.auth.apiKey.addTo === 'header') {
               validHeaders.push({ key: tab.auth.apiKey.key, value: tab.auth.apiKey.value });
           } else if (tab.auth.apiKey.addTo === 'query') {
-              const separator = finalUrl.includes('?') ? '&' : '?';
-              finalUrl = `${finalUrl}${separator}${tab.auth.apiKey.key}=${encodeURIComponent(tab.auth.apiKey.value)}`;
+              finalUrl = appendQueryParam(finalUrl, tab.auth.apiKey.key, tab.auth.apiKey.value);
           }
       }
 
