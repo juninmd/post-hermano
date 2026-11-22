@@ -52,7 +52,7 @@ export function runScript(
   const log = (level: string) => (...m: unknown[]) => out.logs.push({ level, messages: m.map(x => String(x)) });
   const pm = {
     environment: {
-      get: (k: string) => out.environment[k],
+      get: (k: string) => (Object.hasOwn(out.environment, k) ? out.environment[k] : undefined),
       set: (k: string, v: unknown) => { out.environment[k] = String(v); },
       unset: (k: string) => { delete out.environment[k]; },
     },
