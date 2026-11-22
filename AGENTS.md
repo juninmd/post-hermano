@@ -1,83 +1,48 @@
-```markdown
-# AGENTS.md - AI Coding Agent Guidelines
+# AGENTS.md
 
-These guidelines are designed to ensure consistent, maintainable, and high-quality code for our AI coding agents. Adherence to these principles will maximize productivity and minimize future maintenance overhead.
+PingHermano: a desktop API client in the Postman style (request tabs, collections, `{{variables}}` environments, pre-request and test scripts, history, response viewer). Tauri 2 shell with a React + TypeScript front end in `src/renderer/` and a Rust HTTP backend in `src-tauri/`.
 
-## 1. DRY (Don't Repeat Yourself)
+## Stack
 
-*   **Single Responsibility Principle:** Each agent function or module should have a single, clearly defined purpose.
-*   **Abstraction:** Use abstractions where possible to represent common patterns and data structures.
-*   **Code Reuse:** Design modules and functions to be reusable across multiple agents or projects.
-*   **Documentation:** Provide clear documentation for all code, explaining the purpose, inputs, and outputs.
+- Front end: React, TypeScript, Vite, Vitest (jsdom, `vmThreads` pool).
+- Desktop shell and backend: Tauri 2, Rust (`reqwest` client in `src-tauri/src/http.rs`).
+- Package manager: pnpm 10.34.5 (pinned in `package.json`; use `pnpm-lock.yaml`).
 
-## 2. KISS (Keep It Simple, Stupid)
+## Commands
 
-*   **Minimalism:** Strive for the simplest possible solution that meets the current requirements.
-*   **Readability:** Code should be easy to understand – use descriptive variable names, comments, and formatting.
-*   **Efficiency:** Prioritize efficiency; avoid unnecessary complexity.
-*   **Testability:** Design code that’s easy to test.
-
-## 3. SOLID Principles
-
-*   **Single Responsibility:** Each class/module encapsulates a single responsibility.
-*   **Open/Closed Principle:**  The system should be extensible without modifying the existing code. (Limited use of modifications)
-*   **Liskov Substitution Principle:**  Subclasses should be substitutable for their base classes without altering the correctness of the program.
-*   **Interface Segregation Principle:** Clients shouldn't be forced to implement interfaces they don't use.
-*   **Dependency Inversion Principle:**  High-level modules should be dependent on low-level modules, not vice versa.
-
-## 4. YAGNI (You Aren't Gonna Need It)
-
-*   **Avoid Over-Engineering:** Don’t add features or complexity that aren’t currently required.
-*   **Focus on Core Functionality:** Prioritize implementing the essential requirements of the agent.
-*   **Refactor Only When Necessary:**  Refactoring should be driven by the need for improved design or performance, not by a desire to "fix" existing code.
-
-## 5. Development Guidelines
-
-*   **Coding Standards:** Adhere to the established coding style (refer to [Style Guide Link]).
-*   **Error Handling:** Implement appropriate error handling, logging, and exception handling.
-*   **Testing:** All development must be productive.  Use mocks and stubs *exclusively* for unit and integration tests.
-*   **Code Reviews:**  All code changes must be reviewed by at least one other agent.
-*   **Documentation Updates:**  Maintain up-to-date documentation within the code.
-*   **Version Control:** Use Git for version control; commit frequently and with clear commit messages.
-
-## 6. File Size Limits
-
-*   **Maximum Code Length:** 180 lines of code per file.
-*   **File Structure:** Files should have a clear and logical directory structure.
-
-## 7. Test Coverage Requirements
-
-*   **Target Coverage:**  Achieve a minimum of 85% test coverage.
-*   **Test Types:** Include unit tests, integration tests, and edge case tests.
-*   **Test Data:** Utilize realistic test data for thorough testing.
-
-## 8.  Framework Usage
-
-*   Utilize [Framework Name] for [Specific Purpose].
-*   Documentation for framework usage should be readily available.
-
-## 9.  Other Considerations
-
-*   **Data Structures:** Carefully select data structures to optimize performance.
-*   **Algorithm Selection:** Choose appropriate algorithms for each task.
-*   **Security:**  Implement basic security measures to protect against common vulnerabilities (if applicable).
-
-## 10.  Documentation
-
-*   Provide concise and helpful comments within the code to explain complex logic.
-*   Document API usage.
-
-These guidelines are subject to change.  Updates will be communicated to all agents.
+```bash
+pnpm install
+pnpm dev                 # Vite dev server (front end only)
+pnpm tauri:dev           # desktop app with the Rust backend
+pnpm build               # vite build
+pnpm tauri:build         # desktop bundle
+pnpm test                # vitest (watch mode by default; use `pnpm test --run` for a single pass)
+pnpm typecheck           # tsc --noEmit
 ```
 
-<!-- base-actions-main-policy -->
-## GitHub Actions — padrão obrigatório (@main)
+Coverage: `@vitest/coverage-v8` is installed, but no threshold is configured.
 
-- Referencie as actions internas sempre pelo branch, nunca por SHA:
-  - `uses: juninmd/base-actions/<action>@main`
-  - `uses: juninmd/base-actions/.github/workflows/<arquivo>.yml@main`
-- Não fixe `@<sha>` em `juninmd/base-actions`: a atualização é centralizada no
-  `main` e passa a valer no próximo run.
-- PRs cujos checks não iniciam por billing/spending limit são mesclados pelo bot central
-  `juninmd/base-actions/.github/workflows/auto-merge-billing-blocked.yml`.
-  Para impedir o merge automático de um PR, aplique a label `do-not-merge`.
+## Structure
+
+- `src/renderer/`: React app. `api/` (`tauriApi.ts`, `scriptRunner.ts`), `components/` (request editor, response viewer, sidebar, tabs, command palette, environment modal), `stores/`, `test/` (shared setup).
+- `src-tauri/src/`: Rust backend. `http.rs` runs requests (one client, cancellable in-flight calls); `lib.rs` and `main.rs` wire Tauri commands.
+- `docs/`: README images and screenshots.
+
+## Conventions
+
+- Max 180 lines per file. Split a component or module once it grows past that.
+- Unit and integration tests use mocks and stubs only, with no real network or real API calls. Test data should look realistic.
+- Target 85% test coverage (owner goal; not enforced yet).
+- Follow DRY, KISS, YAGNI and SOLID. Keep modules single-purpose, and do not add features before they are needed.
+- Document API usage and non-obvious logic with short comments.
+- Commits: small and frequent, with a clear message.
+- Every code change is reviewed by at least one other agent before merge.
+- GitHub Actions: <!-- base-actions-main-policy -->
+  - Reference internal actions by branch, never by SHA: `uses: juninmd/base-actions/<action>@main` and `uses: juninmd/base-actions/.github/workflows/<file>.yml@main`.
+  - Do not pin `@<sha>` for `juninmd/base-actions`; updates are centralized on `main`.
+  - PRs whose checks do not start because of billing or spending limits are auto-merged by `juninmd/base-actions/.github/workflows/auto-merge-billing-blocked.yml`. Apply the `do-not-merge` label to block that.
+
+## Gotchas
+
+- CI (`validate.yml`) calls the reusable `validate` workflow from `juninmd/base-actions`. It does not run `pnpm test` or `cargo` in this repo's own files.
+- `vitest` runs in watch mode by default. Use `pnpm test --run` in scripts and CI-like checks.
