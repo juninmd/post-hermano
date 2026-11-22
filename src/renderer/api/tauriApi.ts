@@ -7,7 +7,7 @@ type KV = { key: string; value: string };
 const files = new Map<string, File>();
 
 const interpolate = (s: string, env: Record<string, string>) =>
-  typeof s === 'string' ? s.replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (m, k) => (k in env ? env[k] : m)) : s;
+  typeof s === 'string' ? s.replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (m, k) => (Object.hasOwn(env, k) ? env[k] : m)) : s;
 
 const fail = (error: string, statusText = 'Error') =>
   ({ error, status: 0, statusText, headers: {}, data: '' });
