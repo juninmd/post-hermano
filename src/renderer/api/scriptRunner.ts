@@ -2,6 +2,8 @@
  * Minimal Postman-style script sandbox (`pm` API) for pre-request and test scripts.
  * Scripts are authored by the user and run locally inside a Function scope.
  */
+import { deepEqual } from '../utils/deepEqual';
+
 export interface TestResult { name: string; passed: boolean; error: string | null }
 export interface ConsoleEntry { level: string; messages: string[] }
 export interface ScriptResponse { code: number; status: string; headers: Record<string, string>; text: string }
@@ -20,7 +22,7 @@ function makeExpect(actual: any) {
   const api: any = {
     to: {
       equal: (e: any) => check(actual === e, `expected ${fmt(actual)} to equal ${fmt(e)}`),
-      eql: (e: any) => check(JSON.stringify(actual) === JSON.stringify(e), `expected ${fmt(actual)} to deeply equal ${fmt(e)}`),
+      eql: (e: any) => check(deepEqual(actual, e), `expected ${fmt(actual)} to deeply equal ${fmt(e)}`),
       include: (e: any) => check(actual?.includes?.(e), `expected ${fmt(actual)} to include ${fmt(e)}`),
       have: {
         property: (k: string) => check(actual != null && k in Object(actual), `expected object to have property ${k}`),
