@@ -27,3 +27,10 @@ describe('runScript', () => {
     expect(out.error).toBe('boom');
   });
 });
+
+describe('pm.environment.get', () => {
+  it('returns undefined for inherited Object keys', () => {
+    const out = runScript("pm.test('k', () => pm.expect(pm.environment.get('constructor')).to.equal(undefined))", {});
+    expect(out.tests[0]).toEqual({ name: 'k', passed: true, error: null });
+  });
+});
