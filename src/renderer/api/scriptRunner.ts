@@ -64,8 +64,17 @@ export function runScript(
       json: () => JSON.parse(response.text),
     },
     expect: makeExpect,
-    test: (name: string, fn: () => void) => {
-      try { fn(); out.tests.push({ name, passed: true, error: null }); }
+    test: (name: string, fn: () => unknown) => {
+      try {
+        const r: any = fn();
+        // Scripts run synchronously: a promise's outcome is unknown here, so never report it as passed.
+        if (typeof r?.then === 'function') {
+          r.then(undefined, () => {});
+          out.tests.push({ name, passed: false, error: 'async test callbacks are not supported; use a synchronous function' });
+          return;
+        }
+        out.tests.push({ name, passed: true, error: null });
+      }
       catch (e: any) { out.tests.push({ name, passed: false, error: e?.message ?? String(e) }); }
     },
   };

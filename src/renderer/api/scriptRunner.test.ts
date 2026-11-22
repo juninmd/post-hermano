@@ -51,3 +51,11 @@ describe('pm.environment.get', () => {
     expect(out.tests[0]).toEqual({ name: 'k', passed: true, error: null });
   });
 });
+
+describe('pm.test with an async callback', () => {
+  it('does not report a test that returns a promise as passed', async () => {
+    const out = runScript('pm.test("async", async () => { throw new Error("boom") })', {});
+    expect(out.tests[0].passed).toBe(false);
+    expect(out.tests[0].error).toMatch(/async/i);
+  });
+});
