@@ -28,6 +28,23 @@ describe('runScript', () => {
   });
 });
 
+describe('pm.expect().to.eql', () => {
+  const eql = (a: string, b: string) => runScript(`pm.test('t', () => pm.expect(${a}).to.eql(${b}))`, {}).tests[0];
+
+  it('treats objects with the same members in another key order as equal', () => {
+    expect(eql('{a:1,b:{c:[1,2],d:2}}', '{b:{d:2,c:[1,2]},a:1}').passed).toBe(true);
+  });
+
+  it('still fails on different values, array order or extra keys', () => {
+    expect(eql('{a:1}', '{a:2}').passed).toBe(false);
+    expect(eql('[1,2]', '[2,1]').passed).toBe(false);
+    expect(eql('{a:1}', '{a:1,b:2}').passed).toBe(false);
+    expect(eql('{a:undefined}', '{}').passed).toBe(false);
+    expect(eql('[1]', '{0:1}').passed).toBe(false);
+    expect(eql('null', '{}').passed).toBe(false);
+  });
+});
+
 describe('pm.environment.get', () => {
   it('returns undefined for inherited Object keys', () => {
     const out = runScript("pm.test('k', () => pm.expect(pm.environment.get('constructor')).to.equal(undefined))", {});
