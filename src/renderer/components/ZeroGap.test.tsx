@@ -91,6 +91,7 @@ describe('Zero Gap UI Tests', () => {
         // Mock FileReader
         const originalFileReader = window.FileReader;
         window.FileReader = class {
+      onload: ((e: any) => void) | null = null;
             readAsText() {
                 if (this.onload) {
                     this.onload({ target: { result: null } } as any);

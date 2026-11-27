@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/juninmd/Ping-Hermano#readme",
   "dependencies": {
+    "@juninmd/sonido": "^2.5.0",
     "mobx": "^7.1.4",
     "mobx-react-lite": "^5.1.2",
     "react": "^19.3.1",

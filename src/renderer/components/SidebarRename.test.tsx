@@ -6,7 +6,7 @@ import { requestStore } from '../stores/RequestStore';
 import { runInAction } from 'mobx';
 
 describe('Sidebar Rename Coverage', () => {
-    let originalPrompt;
+    let originalPrompt: typeof window.prompt;
 
     beforeEach(() => {
         originalPrompt = window.prompt;

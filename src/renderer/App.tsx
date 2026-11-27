@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import { Button, Card, ToastProvider, Tooltip } from '@juninmd/sonido';
 import { GlobalStyle } from './styles/GlobalStyle';
 import { CommandPalette } from './components/CommandPalette';
 import { requestStore } from './stores/RequestStore';
@@ -18,16 +19,12 @@ const AppContainer = styled.div`
   gap: 0;
 `;
 
-const glass = `
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  backdrop-filter: blur(18px) saturate(1.3);
-  box-shadow: var(--shadow);
+const ThemeTip = styled(Tooltip)`
+  position: fixed; right: 18px; bottom: 16px; z-index: 20;
 `;
 
-const ThemeBtn = styled.button`
-  position: fixed; right: 18px; bottom: 16px; z-index: 20; width: 36px; height: 36px;
+const ThemeBtn = styled(Button)`
+  width: 36px; height: 36px; min-height: 36px; padding: 0;
   border: 1px solid var(--line); background: var(--surface2); color: var(--fg);
   &:hover { transform: rotate(20deg) scale(1.08); border-color: var(--accent); }
 `;
@@ -47,8 +44,18 @@ const SidebarWrapper = styled.div<{ width: number }>`
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
-  ${glass}
   animation: rise .5s both;
+
+  > .sn-card {
+    height: 100%;
+    gap: 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  > .sn-card > * {
+    flex: 1;
+    min-height: 0;
+  }
 `;
 
 const EditorWrapper = styled.div`
@@ -165,11 +172,11 @@ function App() {
   };
 
   return (
-    <>
+    <ToastProvider>
       <GlobalStyle />
       <AppContainer>
         <SidebarWrapper width={sidebarWidth}>
-             <Sidebar />
+             <Card surface="glass" padding="none" className="sidebar-panel"><Sidebar /></Card>
         </SidebarWrapper>
 
         <ResizeHandle direction="horizontal" onMouseDown={startResizeSidebar} />
@@ -187,9 +194,13 @@ function App() {
             </ResponseWrapper>
         </MainContent>
       </AppContainer>
-      <ThemeBtn onClick={toggleTheme} aria-label="Alternar tema" title="Alternar tema"><span style={{ fontSize: 18 }}>◐</span></ThemeBtn>
+      <ThemeTip content="Alternar tema" side="top">
+        <ThemeBtn variant="secondary" size="icon" onClick={toggleTheme} aria-label="Alternar tema">
+          <span style={{ fontSize: 18 }}>◐</span>
+        </ThemeBtn>
+      </ThemeTip>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} toggleTheme={toggleTheme} />
-    </>
+    </ToastProvider>
   );
 }
 

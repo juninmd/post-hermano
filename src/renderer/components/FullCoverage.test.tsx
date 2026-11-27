@@ -95,7 +95,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.auth = { type: 'basic', username: 'user', password: 'pass' };
             });
             render(<CodeSnippetModal onClose={() => {}} />);
-            const codeArea = screen.getByRole('textbox', { name: '' }) as HTMLTextAreaElement;
+            const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
             expect(codeArea.value).toContain('Authorization: Basic dXNlcjpwYXNz');
         });
 
@@ -105,7 +105,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.auth = { type: 'bearer', token: 'mytoken' };
             });
             render(<CodeSnippetModal onClose={() => {}} />);
-            const codeArea = screen.getByRole('textbox', { name: '' }) as HTMLTextAreaElement;
+            const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
             expect(codeArea.value).toContain('Authorization: Bearer mytoken');
         });
 
@@ -115,7 +115,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.auth = { type: 'apikey', apiKey: { key: 'X-API-KEY', value: '123', addTo: 'header' } };
             });
             render(<CodeSnippetModal onClose={() => {}} />);
-            const codeArea = screen.getByRole('textbox', { name: '' }) as HTMLTextAreaElement;
+            const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
             expect(codeArea.value).toContain('X-API-KEY: 123');
         });
 
@@ -125,7 +125,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.auth = { type: 'apikey', apiKey: { key: 'api_key', value: '123', addTo: 'query' } };
             });
             render(<CodeSnippetModal onClose={() => {}} />);
-            const codeArea = screen.getByRole('textbox', { name: '' }) as HTMLTextAreaElement;
+            const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
             expect(codeArea.value).toContain('http://example.com?api_key=123');
         });
 
@@ -135,14 +135,14 @@ describe('Full Coverage Tests', () => {
                 requestStore.auth = { type: 'apikey', apiKey: { key: 'api_key', value: '123', addTo: 'query' } };
             });
             render(<CodeSnippetModal onClose={() => {}} />);
-            const codeArea = screen.getByRole('textbox', { name: '' }) as HTMLTextAreaElement;
+            const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
             expect(codeArea.value).toContain('http://example.com?foo=bar&api_key=123');
         });
 
         it('should switch between curl and fetch', () => {
              render(<CodeSnippetModal onClose={() => {}} />);
              fireEvent.click(screen.getByText('Fetch'));
-             const codeArea = screen.getByRole('textbox', { name: '' });
+             const codeArea = screen.getByRole('textbox') as HTMLTextAreaElement;
              expect(codeArea.value).toContain('fetch("');
 
              fireEvent.click(screen.getByText('cURL'));
@@ -284,7 +284,7 @@ describe('Full Coverage Tests', () => {
             expect(screen.getAllByPlaceholderText('Key')).toHaveLength(2);
 
             // Remove row
-            const removeBtns = screen.getAllByRole('button', { name: '✕' });
+            const removeBtns = screen.getAllByRole('button', { name: /Remove/ });
             fireEvent.click(removeBtns[0]);
 
             expect(screen.getAllByPlaceholderText('Key')).toHaveLength(1);
@@ -306,7 +306,7 @@ describe('Full Coverage Tests', () => {
             expect(screen.getAllByPlaceholderText('Key')).toHaveLength(2);
 
             // Remove row
-            const removeBtns = screen.getAllByRole('button', { name: '✕' });
+            const removeBtns = screen.getAllByRole('button', { name: /Remove/ });
             fireEvent.click(removeBtns[0]);
 
             expect(screen.getAllByPlaceholderText('Key')).toHaveLength(1);
@@ -364,7 +364,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.response = { data: null, status: 200, headers: {} };
             });
             render(<ResponseViewer />);
-            const bodyArea = screen.getByRole('textbox', { name: '' });
+            const bodyArea = screen.getByRole('textbox');
             expect(bodyArea).toHaveValue('');
         });
 
@@ -373,7 +373,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.response = { data: { foo: 'bar' }, status: 200, headers: {} };
             });
             render(<ResponseViewer />);
-            const bodyArea = screen.getByRole('textbox', { name: '' });
+            const bodyArea = screen.getByRole('textbox');
             expect(bodyArea).toHaveValue('{\n  "foo": "bar"\n}');
         });
 
@@ -382,7 +382,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.response = { data: '{"foo": "bar"}', status: 200, headers: {} };
             });
             render(<ResponseViewer />);
-            const bodyArea = screen.getByRole('textbox', { name: '' });
+            const bodyArea = screen.getByRole('textbox');
             expect(bodyArea).toHaveValue('{\n  "foo": "bar"\n}');
         });
 
@@ -391,7 +391,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.response = { data: 'invalid json', status: 200, headers: {} };
             });
             render(<ResponseViewer />);
-            const bodyArea = screen.getByRole('textbox', { name: '' });
+            const bodyArea = screen.getByRole('textbox');
             expect(bodyArea).toHaveValue('invalid json');
         });
 
@@ -400,7 +400,7 @@ describe('Full Coverage Tests', () => {
                 requestStore.response = { data: 123, status: 200, headers: {} };
             });
             render(<ResponseViewer />);
-            const bodyArea = screen.getByRole('textbox', { name: '' });
+            const bodyArea = screen.getByRole('textbox');
             expect(bodyArea).toHaveValue('123');
         });
     });

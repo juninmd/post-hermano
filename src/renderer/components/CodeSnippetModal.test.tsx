@@ -80,14 +80,14 @@ describe('CodeSnippetModal', () => {
     it('should close on button click', () => {
         const close = vi.fn();
         render(<CodeSnippetModal onClose={close} />);
-        fireEvent.click(screen.getByText('✕'));
+        fireEvent.click(screen.getByLabelText('Fechar'));
         expect(close).toHaveBeenCalled();
     });
 
     it('should close on overlay click', () => {
         const close = vi.fn();
         render(<CodeSnippetModal onClose={close} />);
-        fireEvent.click(screen.getByTestId('modal-overlay'));
+        fireEvent.click(screen.getByRole('dialog'));
         expect(close).toHaveBeenCalled();
     });
 

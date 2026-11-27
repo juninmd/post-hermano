@@ -66,11 +66,11 @@ describe('RequestEditor', () => {
         expect(requestStore.bodyFormData[0].type).toBe('file');
 
         // Trigger file selection
-        const fileInput = container.querySelector('input[type="file"]');
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
         expect(fileInput).toBeInTheDocument();
 
         const file = new File(['(⌐□_□)'], 'chucknorris.png', { type: 'image/png' });
-        await user.upload(fileInput!, file);
+        await user.upload(fileInput, file);
 
         expect(requestStore.bodyFormData[0].src).toBe('/path/to/file.png');
         expect(requestStore.bodyFormData[0].value).toBe('chucknorris.png');
@@ -91,9 +91,9 @@ describe('RequestEditor', () => {
         fireEvent.change(typeSelect, { target: { value: 'file' } });
         rerender(<RequestEditor />);
 
-        const fileInput = container.querySelector('input[type="file"]');
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
         const file = new File(['(⌐□_□)'], 'chucknorris.png', { type: 'image/png' });
-        await user.upload(fileInput!, file);
+        await user.upload(fileInput, file);
 
         expect(requestStore.bodyFormData[0].src).toBe('chucknorris.png');
 

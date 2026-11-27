@@ -1,107 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { Button, Dialog, Tabs, TextField } from '@juninmd/sonido';
 import { requestStore } from '../stores/RequestStore';
 import { generateCurl, generateFetch, RequestData } from '../utils/codeGenerator';
 import { observer } from 'mobx-react-lite';
 import { base64Utf8 } from '../utils/base64';
 
-const Overlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
+const SnippetDialog = styled(Dialog)`
+  width: 620px;
 
-const ModalContent = styled.div`
-  background-color: var(--surface);
-  border: 1px solid var(--line);
-  width: 600px;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 4px;
-`;
-
-const Header = styled.div`
-  padding: 10px 15px;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  color: #fff;
-`;
-
-const CloseBtn = styled.button`
-  background: none;
-  border: none;
-  color: var(--fg);
-  cursor: pointer;
-  font-size: 16px;
-  &:hover { color: #fff; }
-`;
-
-const Tabs = styled.div`
-  display: flex;
-  border-bottom: 1px solid var(--line);
-  background-color: var(--surface2);
-`;
-
-const Tab = styled.button<{ $active: boolean }>`
-  padding: 10px 20px;
-  background: ${props => props.$active ? 'var(--surface)' : 'transparent'};
-  border: none;
-  border-bottom: 2px solid ${props => props.$active ? 'var(--accent)' : 'transparent'};
-  color: ${props => props.$active ? '#fff' : 'var(--mute)'};
-  cursor: pointer;
-
-  &:hover {
-    color: #fff;
+  & .sn-dialog__panel {
+    height: 440px;
+    grid-template-rows: auto 1fr auto;
+  }
+  & .sn-dialog__body {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  & .snippet-tabs {
+    flex: none;
+  }
+  & .snippet-code {
+    flex: 1;
+    min-height: 0;
+    margin-top: 10px;
+  }
+  & .snippet-code .sn-field__box,
+  & .snippet-code .sn-field__control {
+    height: 100%;
+  }
+  & .snippet-code .sn-field__control {
+    resize: none;
+    background: var(--bg);
+    border: none;
+    border-radius: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 12px;
   }
 `;
 
-const CodeArea = styled.textarea`
-  flex: 1;
-  background-color: var(--bg);
-  color: var(--fg);
-  border: none;
-  padding: 15px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 12px;
-  resize: none;
-  outline: none;
-`;
+type SnippetTab = 'curl' | 'fetch';
 
-const Footer = styled.div`
-  padding: 10px 15px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-`;
-
-const Button = styled.button`
-  padding: 6px 12px;
-  background-color: var(--accent);
-  color: white;
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  cursor: pointer;
-  &:hover { background-color: var(--accent-h); }
-`;
+const snippetTabs: { key: SnippetTab; label: string }[] = [
+  { key: 'curl', label: 'cURL' },
+  { key: 'fetch', label: 'Fetch' },
+];
 
 interface Props {
   onClose: () => void;
 }
 
 export const CodeSnippetModal = observer(({ onClose }: Props) => {
-  const [activeTab, setActiveTab] = useState<'curl' | 'fetch'>('curl');
+  const [activeTab, setActiveTab] = useState<SnippetTab>('curl');
   const [code, setCode] = useState('');
 
   useEffect(() => {
@@ -148,21 +100,28 @@ export const CodeSnippetModal = observer(({ onClose }: Props) => {
   };
 
   return (
-    <Overlay onClick={onClose} data-testid="modal-overlay">
-      <ModalContent onClick={e => e.stopPropagation()}>
-        <Header>
-          <span>Generate Code</span>
-          <CloseBtn onClick={onClose}>✕</CloseBtn>
-        </Header>
-        <Tabs>
-          <Tab $active={activeTab === 'curl'} onClick={() => setActiveTab('curl')}>cURL</Tab>
-          <Tab $active={activeTab === 'fetch'} onClick={() => setActiveTab('fetch')}>Fetch</Tab>
-        </Tabs>
-        <CodeArea value={code} readOnly />
-        <Footer>
-          <Button onClick={handleCopy}>Copy</Button>
-        </Footer>
-      </ModalContent>
-    </Overlay>
+    <SnippetDialog
+      open
+      onClose={onClose}
+      title="Generate Code"
+      footer={<Button variant="primary" onClick={handleCopy}>Copy</Button>}
+    >
+      <Tabs
+        className="snippet-tabs"
+        label="Linguagem do snippet"
+        variant="pill"
+        items={snippetTabs}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
+      <TextField
+        className="snippet-code"
+        label="Generated code"
+        hideLabel
+        multiline
+        readOnly
+        value={code}
+      />
+    </SnippetDialog>
   );
 });

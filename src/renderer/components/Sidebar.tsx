@@ -1,8 +1,17 @@
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { observer } from 'mobx-react-lite';
+import { Badge, Button, EmptyState, Tabs, type BadgeTone } from '@juninmd/sonido';
 import { requestStore, Environment } from '../stores/RequestStore';
 import { EnvironmentModal } from './EnvironmentModal';
+
+type Section = 'history' | 'collections' | 'environments';
+
+const sectionTabs: { key: Section; label: string }[] = [
+  { key: 'history', label: 'History' },
+  { key: 'collections', label: 'Collections' },
+  { key: 'environments', label: 'Envs' },
+];
 
 const SidebarContainer = styled.div`
   width: 250px;
@@ -14,24 +23,20 @@ const SidebarContainer = styled.div`
 `;
 
 const SidebarHeader = styled.div`
-  padding: 0;
+  padding: 0 6px;
   border-bottom: 1px solid var(--line);
   display: flex;
-`;
 
-const TabButton = styled.button<{ $active: boolean }>`
-  flex: 1;
-  background-color: ${props => props.$active ? 'var(--surface)' : 'var(--surface2)'};
-  border: none;
-  border-bottom: 2px solid ${props => props.$active ? 'var(--accent)' : 'transparent'};
-  color: ${props => props.$active ? '#fff' : 'var(--mute)'};
-  padding: 10px;
-  cursor: pointer;
-  font-weight: 500;
-
-  &:hover {
-    background-color: var(--surface);
-    color: #fff;
+  .sn-tabs {
+    width: 100%;
+    gap: 0;
+  }
+  .sn-tab {
+    flex: 1;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 8px;
+    border-radius: 0;
   }
 `;
 
@@ -50,16 +55,21 @@ const HeaderActions = styled.div`
   }
 `;
 
-const ActionBtn = styled.button`
+const ActionBtn = styled(Button)`
+  min-height: 28px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 16px;
   background: none;
   border: none;
-  cursor: pointer;
-  font-size: 16px;
   opacity: 0.6;
   color: inherit;
+  box-shadow: none;
 
   &:hover {
     opacity: 1;
+    background: var(--surface3);
+    transform: none;
   }
 `;
 
@@ -88,24 +98,37 @@ const ItemContainer = styled.div`
   }
 `;
 
-const MethodBadge = styled.span<{ method: string }>`
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 4px;
-  border-radius: 3px;
-  min-width: 35px;
-  text-align: center;
-  color: ${props => {
-    switch (props.method.toLowerCase()) {
-      case 'get': return 'var(--ok)';
-      case 'post': return 'var(--warn)';
-      case 'put': return 'var(--accent)';
-      case 'delete': return 'var(--err)';
-      case 'patch': return 'var(--patch)';
-      default: return 'var(--fg)';
-    }
-  }};
-`;
+const methodColor = (method: string) => {
+  switch (method.toLowerCase()) {
+    case 'get': return 'var(--ok)';
+    case 'post': return 'var(--warn)';
+    case 'put': return 'var(--accent)';
+    case 'delete': return 'var(--err)';
+    case 'patch': return 'var(--patch)';
+    default: return 'var(--fg)';
+  }
+};
+
+const methodTone = (method: string): BadgeTone => {
+  switch (method.toLowerCase()) {
+    case 'get': return 'success';
+    case 'post': return 'warning';
+    case 'put': return 'accent';
+    case 'delete': return 'danger';
+    case 'patch': return 'violet';
+    default: return 'neutral';
+  }
+};
+
+const MethodBadge = ({ method }: { method: string }) => (
+  <Badge
+    appearance="soft"
+    tone={methodTone(method)}
+    style={{ minWidth: 42, justifyContent: 'center', color: methodColor(method), fontSize: 10 }}
+  >
+    {method}
+  </Badge>
+);
 
 const TextTruncate = styled.span`
   white-space: nowrap;
@@ -113,13 +136,6 @@ const TextTruncate = styled.span`
   text-overflow: ellipsis;
   color: var(--fg);
   flex: 1;
-`;
-
-const EmptyState = styled.div`
-  padding: 20px;
-  text-align: center;
-  color: var(--mute);
-  font-style: italic;
 `;
 
 const CollectionItem = styled.div`
@@ -248,24 +264,13 @@ export const Sidebar = observer(() => {
   return (
     <SidebarContainer>
       <SidebarHeader>
-        <TabButton
-          $active={activeTab === 'history'}
-          onClick={() => setActiveTab('history')}
-        >
-          History
-        </TabButton>
-        <TabButton
-          $active={activeTab === 'collections'}
-          onClick={() => setActiveTab('collections')}
-        >
-          Collections
-        </TabButton>
-        <TabButton
-            $active={activeTab === 'environments'}
-            onClick={() => setActiveTab('environments')}
-        >
-            Envs
-        </TabButton>
+        <Tabs
+          label="Seções da barra lateral"
+          variant="underline"
+          items={sectionTabs}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
       </SidebarHeader>
 
       {activeTab === 'history' && (
@@ -278,14 +283,14 @@ export const Sidebar = observer(() => {
           </HeaderActions>
           <ListContainer>
             {history.length === 0 ? (
-              <EmptyState>No history yet</EmptyState>
+              <EmptyState title="No history yet" />
             ) : (
               history.map((item) => (
                 <ItemContainer
                   key={item.id}
                   onClick={() => loadHistoryItem(item)}
                 >
-                  <MethodBadge method={item.method}>{item.method}</MethodBadge>
+                  <MethodBadge method={item.method} />
                   <TextTruncate title={item.url}>{item.url}</TextTruncate>
                 </ItemContainer>
               ))
@@ -313,7 +318,7 @@ export const Sidebar = observer(() => {
           </HeaderActions>
           <ListContainer>
              {collections.length === 0 ? (
-               <EmptyState>No collections. Create one!</EmptyState>
+               <EmptyState title="No collections. Create one!" />
              ) : (
                collections.map(col => (
                  <CollectionItem key={col.id}>
@@ -336,7 +341,7 @@ export const Sidebar = observer(() => {
                         key={req.id}
                         onClick={() => loadHistoryItem(req)}
                       >
-                         <MethodBadge method={req.method}>{req.method}</MethodBadge>
+                         <MethodBadge method={req.method} />
                          <TextTruncate title={req.name || req.url}>{req.name || req.url}</TextTruncate>
                          <ActionBtn onClick={(e) => {
                             e.stopPropagation();
@@ -375,7 +380,7 @@ export const Sidebar = observer(() => {
             </HeaderActions>
             <ListContainer>
                 {environments.length === 0 ? (
-                    <EmptyState>No environments created.</EmptyState>
+                    <EmptyState title="No environments created." />
                 ) : (
                     environments.map(env => (
                         <ItemContainer

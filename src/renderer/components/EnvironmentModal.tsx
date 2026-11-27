@@ -1,102 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { Button, Checkbox, Dialog, TextField } from '@juninmd/sonido';
 import { Environment, Variable } from '../stores/RequestStore';
 
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
+const EnvDialog = styled(Dialog)`
+  width: 620px;
 
-const ModalContent = styled.div`
-  background-color: var(--surface);
-  width: 600px;
-  height: 500px;
-  border: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-`;
-
-const ModalHeader = styled.div`
-  padding: 10px 15px;
-  border-bottom: 1px solid var(--line);
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--fg);
-`;
-
-const ModalBody = styled.div`
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-const ModalFooter = styled.div`
-  padding: 10px 15px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-`;
-
-const Input = styled.input`
-  padding: 8px;
-  background-color: var(--input);
-  color: var(--fg);
-  border: 1px solid var(--line);
-  outline: none;
-  width: 100%;
-
-  &:focus {
-    border-color: var(--accent);
+  & .sn-dialog__panel {
+    height: 520px;
+    grid-template-rows: auto 1fr auto;
   }
+  & .sn-dialog__body {
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+`;
+
+const Variables = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 const VariableRow = styled.div`
   display: flex;
   gap: 10px;
   align-items: center;
-`;
 
-const Checkbox = styled.input`
-  cursor: pointer;
-`;
-
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  color: var(--mute);
-  cursor: pointer;
-  font-size: 16px;
-
-  &:hover {
-    color: var(--err);
-  }
-`;
-
-const Button = styled.button<{ $primary?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${props => props.$primary ? 'var(--accent)' : 'var(--input)'};
-  color: ${props => props.$primary ? 'white' : 'var(--fg)'};
-  border: 1px solid ${props => props.$primary ? 'var(--accent)' : 'var(--line)'};
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${props => props.$primary ? 'var(--accent-h)' : 'var(--line2)'};
-  }
+  .sn-field { flex: 1; min-width: 0; }
+  /* O rótulo continua no nome acessível, mas a linha fica compacta. */
+  .sn-check__text { display: none; }
 `;
 
 interface Props {
@@ -130,51 +66,65 @@ export const EnvironmentModal: React.FC<Props> = ({ environment, onSave, onClose
   };
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={e => e.stopPropagation()}>
-        <ModalHeader>
-          <span>Edit Environment</span>
-          <IconButton onClick={onClose}>✕</IconButton>
-        </ModalHeader>
-        <ModalBody>
-          <div>
-            <label style={{ display: 'block', marginBottom: 5, color: 'var(--mute)' }}>Environment Name</label>
-            <Input value={name} onChange={e => setName(e.target.value)} />
-          </div>
+    <EnvDialog
+      open
+      onClose={onClose}
+      title="Edit Environment"
+      footer={(
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={() => onSave(environment.id, name, variables)}>Save</Button>
+        </>
+      )}
+    >
+      <TextField
+        label="Environment name"
+        hideLabel
+        value={name}
+        placeholder="Environment name"
+        onChange={e => setName(e.target.value)}
+      />
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 5, color: 'var(--mute)' }}>Variables</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {variables.map((v, i) => (
-                    <VariableRow key={i}>
-                        <Checkbox
-                            type="checkbox"
-                            checked={v.enabled}
-                            onChange={e => handleVariableChange(i, 'enabled', e.target.checked)}
-                        />
-                        <Input
-                            placeholder="Variable"
-                            value={v.key}
-                            onChange={e => handleVariableChange(i, 'key', e.target.value)}
-                        />
-                        <Input
-                            placeholder="Value"
-                            value={v.value}
-                            onChange={e => handleVariableChange(i, 'value', e.target.value)}
-                        />
-                        {variables.length > 1 && i !== variables.length - 1 && (
-                            <IconButton onClick={() => removeVariable(i)}>🗑️</IconButton>
-                        )}
-                    </VariableRow>
-                ))}
-            </div>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button $primary onClick={() => onSave(environment.id, name, variables)}>Save</Button>
-        </ModalFooter>
-      </ModalContent>
-    </ModalOverlay>
+      <div>
+        <label style={{ display: 'block', marginBottom: 6, color: 'var(--mute)' }}>Variables</label>
+        <Variables>
+          {variables.map((v, i) => (
+            <VariableRow key={i}>
+              <Checkbox
+                label={`Enable ${v.key || 'variable'}`}
+                checked={v.enabled}
+                onChange={checked => handleVariableChange(i, 'enabled', checked)}
+              />
+              <TextField
+                label="Variable"
+                hideLabel
+                compact
+                placeholder="Variable"
+                value={v.key}
+                onChange={e => handleVariableChange(i, 'key', e.target.value)}
+              />
+              <TextField
+                label="Value"
+                hideLabel
+                compact
+                placeholder="Value"
+                value={v.value}
+                onChange={e => handleVariableChange(i, 'value', e.target.value)}
+              />
+              {variables.length > 1 && i !== variables.length - 1 && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  aria-label="Remove variable"
+                  onClick={() => removeVariable(i)}
+                >
+                  🗑️
+                </Button>
+              )}
+            </VariableRow>
+          ))}
+        </Variables>
+      </div>
+    </EnvDialog>
   );
 };

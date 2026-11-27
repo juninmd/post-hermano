@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { observer } from 'mobx-react-lite';
+import { Badge, Button, EmptyState, Skeleton, Tabs, ToastProvider, useToast, type BadgeTone } from '@juninmd/sonido';
 import { requestStore } from '../stores/RequestStore';
 import { JsonTree } from './JsonTree';
 import { Timeline } from './Timeline';
+
+type ResponseTab = 'body' | 'headers' | 'preview' | 'tests' | 'tree' | 'timeline';
 
 const ViewerContainer = styled.div<{ $empty?: boolean }>`
     padding: 15px;
@@ -18,20 +21,12 @@ const ViewerContainer = styled.div<{ $empty?: boolean }>`
     `}
 `;
 
-const PlaceholderText = styled.div`
-    color: var(--mute);
-    font-size: 16px;
-`;
-
-const Loader = styled.div`
-    color: var(--accent);
-`;
-
 const ResponseMeta = styled.div`
     display: flex;
     gap: 20px;
     margin-bottom: 10px;
     font-size: 13px;
+    align-items: center;
 `;
 
 const Radar = styled.div`
@@ -43,70 +38,27 @@ const Radar = styled.div`
       background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 0 28px var(--accent); }
 `;
 
-const StatusValue = styled.span<{ status: number }>`
-    font-weight: bold;
-    color: ${props => {
-        if (props.status >= 200 && props.status < 300) return '#4ade80';
-        if (props.status >= 300 && props.status < 400) return '#fbbf24';
-        if (props.status >= 400 && props.status < 600) return '#f87171';
-        return 'inherit';
-    }};
-`;
-
 const MetaInfo = styled.div`
     color: var(--mute);
 `;
 
-const Tabs = styled.div`
+const TabBar = styled.div`
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 12px;
   border-bottom: 1px solid var(--line);
   margin-top: 10px;
-  align-items: center;
-`;
 
-const Spacer = styled.div`
-  flex: 1;
-`;
-
-const ActionButton = styled.button`
-  padding: 4px 12px;
-  background-color: var(--input);
-  color: var(--fg);
-  border: 1px solid var(--line);
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-bottom: 5px;
-
-  &:hover {
-    background-color: var(--line2);
+  .sn-tabs {
+    flex: 1;
+    border-bottom: 0;
   }
 `;
 
-const Tab = styled.div<{ $active?: boolean }>`
-  padding: 8px 0;
-  cursor: pointer;
-  color: ${props => props.$active ? 'var(--fg)' : 'var(--mute)'};
-  font-size: 13px;
-  position: relative;
-  font-weight: ${props => props.$active ? '500' : 'normal'};
-
-  &:hover {
-    color: var(--fg);
-  }
-
-  ${props => props.$active && `
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background-color: var(--accent2);
-    }
-  `}
+const TabActions = styled.div`
+  display: flex;
+  gap: 8px;
+  flex: none;
 `;
 
 const TabContent = styled.div`
@@ -154,6 +106,8 @@ const TestResultsList = styled.div`
 const TestResultItem = styled.div<{ $passed: boolean }>`
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   padding: 8px;
   background-color: ${props => props.$passed ? 'rgba(106, 153, 85, 0.2)' : 'rgba(244, 135, 113, 0.2)'};
   border-left: 3px solid ${props => props.$passed ? 'var(--ok)' : 'var(--err)'};
@@ -201,14 +155,38 @@ const formatBody = (content: any): string => {
   return lastFormatted;
 };
 
-export const ResponseViewer = observer(() => {
+const statusColor = (status: number): string => {
+  if (status >= 200 && status < 300) return '#4ade80';
+  if (status >= 300 && status < 400) return '#fbbf24';
+  if (status >= 400 && status < 600) return '#f87171';
+  return 'inherit';
+};
+
+const statusTone = (status: number): BadgeTone => {
+  if (status >= 200 && status < 300) return 'success';
+  if (status >= 300 && status < 400) return 'warning';
+  if (status >= 400 && status < 600) return 'danger';
+  return 'neutral';
+};
+
+const responseTabs = (passed: number, total: number): { key: ResponseTab; label: string; badge?: string }[] => [
+  { key: 'body', label: 'Body' },
+  { key: 'preview', label: 'Preview' },
+  { key: 'tree', label: 'Tree' },
+  { key: 'headers', label: 'Headers' },
+  { key: 'tests', label: 'Test Results', badge: `${passed}/${total}` },
+  { key: 'timeline', label: 'Timeline' },
+];
+
+const ResponseViewerBody = observer(() => {
   const { response, loading, error, responseMetrics } = requestStore;
-  const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'preview' | 'tests' | 'tree' | 'timeline'>('body');
+  const toast = useToast();
+  const [activeTab, setActiveTab] = useState<ResponseTab>('body');
 
   if (loading) {
     return (
-        <ViewerContainer $empty>
-            <Loader>Loading...</Loader>
+        <ViewerContainer>
+            <Skeleton label="Loading..." rows={4} />
         </ViewerContainer>
     );
   }
@@ -216,7 +194,7 @@ export const ResponseViewer = observer(() => {
   if (error) {
        return (
         <ViewerContainer $empty>
-            <PlaceholderText>Error: {error.message}</PlaceholderText>
+            <EmptyState title={`Error: ${error.message}`} />
         </ViewerContainer>
     );
   }
@@ -224,8 +202,10 @@ export const ResponseViewer = observer(() => {
   if (!response) {
     return (
         <ViewerContainer $empty>
-            <Radar aria-hidden><i /><i /><i /><b /></Radar>
-            <PlaceholderText>Enter URL and click Send to get a response</PlaceholderText>
+            <EmptyState
+                icon={<Radar aria-hidden><i /><i /><i /><b /></Radar>}
+                title="Enter URL and click Send to get a response"
+            />
         </ViewerContainer>
     );
   }
@@ -240,7 +220,9 @@ export const ResponseViewer = observer(() => {
 
   const handleCopy = () => {
     const text = formatBody(data);
-    navigator.clipboard.writeText(text).catch(err => console.error('Failed to copy: ', err));
+    navigator.clipboard.writeText(text)
+      .then(() => toast({ title: 'Resposta copiada', tone: 'success' }))
+      .catch(err => console.error('Failed to copy: ', err));
   };
 
   const handleDownload = () => {
@@ -259,27 +241,27 @@ export const ResponseViewer = observer(() => {
   return (
     <ViewerContainer>
       <ResponseMeta>
-          <div className="status-label">Status: <StatusValue status={status}>{status} {statusText}</StatusValue></div>
+          <div className="status-label">
+            Status: <Badge appearance="soft" tone={statusTone(status)} style={{ color: statusColor(status) }}>{status} {statusText}</Badge>
+          </div>
           <MetaInfo>Time: {responseMetrics.time}ms</MetaInfo>
           <MetaInfo>Size: {responseMetrics.size}</MetaInfo>
       </ResponseMeta>
 
-      <Tabs>
-        <Tab $active={activeTab === 'body'} onClick={() => setActiveTab('body')}>Body</Tab>
-        <Tab $active={activeTab === 'preview'} onClick={() => setActiveTab('preview')}>Preview</Tab>
-        <Tab $active={activeTab === 'tree'} onClick={() => setActiveTab('tree')}>Tree</Tab>
-        <Tab $active={activeTab === 'headers'} onClick={() => setActiveTab('headers')}>Headers</Tab>
-        <Tab $active={activeTab === 'tests'} onClick={() => setActiveTab('tests')}>Test Results ({passedCount}/{totalTests})</Tab>
-        <Tab $active={activeTab === 'timeline'} onClick={() => setActiveTab('timeline')}>Timeline</Tab>
+      <TabBar>
+        <Tabs
+          label="Conteúdo da resposta"
+          items={responseTabs(passedCount, totalTests)}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
         {activeTab === 'body' && (
-            <>
-                <Spacer />
-                <ActionButton onClick={handleCopy} title="Copy to Clipboard">Copy</ActionButton>
-                <div style={{ width: 10 }} />
-                <ActionButton onClick={handleDownload} title="Download Response">Download</ActionButton>
-            </>
+            <TabActions>
+                <Button appearance="outline" size="sm" onClick={handleCopy} title="Copy to Clipboard">Copy</Button>
+                <Button appearance="outline" size="sm" onClick={handleDownload} title="Download Response">Download</Button>
+            </TabActions>
         )}
-      </Tabs>
+      </TabBar>
 
       <TabContent>
         {activeTab === 'body' && (
@@ -314,7 +296,9 @@ export const ResponseViewer = observer(() => {
                 {testResults.map((test: any, index: number) => (
                     <TestResultItem key={index} $passed={test.passed}>
                         <span>{test.name}</span>
-                        <span>{test.passed ? 'PASS' : 'FAIL'}</span>
+                        <Badge appearance="soft" dot tone={test.passed ? 'success' : 'danger'}>
+                          {test.passed ? 'PASS' : 'FAIL'}
+                        </Badge>
                         {test.message && <span> - {test.message}</span>}
                     </TestResultItem>
                 ))}
@@ -324,5 +308,11 @@ export const ResponseViewer = observer(() => {
     </ViewerContainer>
   );
 });
+
+export const ResponseViewer: React.FC = () => (
+  <ToastProvider>
+    <ResponseViewerBody />
+  </ToastProvider>
+);
 
 export default ResponseViewer;
