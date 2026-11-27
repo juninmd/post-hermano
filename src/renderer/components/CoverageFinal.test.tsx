@@ -131,7 +131,7 @@ describe('Coverage Final - UI Components', () => {
              render(<RequestEditor />);
              fireEvent.click(screen.getByText('Body'));
 
-             const removeBtns = screen.getAllByRole('button', { name: '✕' });
+             const removeBtns = screen.getAllByRole('button', { name: /Remove/ });
              expect(removeBtns).toHaveLength(1);
              fireEvent.click(removeBtns[0]);
 
@@ -263,7 +263,7 @@ describe('Coverage Final - UI Components', () => {
                  requestStore.response = { data: obj, status: 200, headers: {} };
              });
              render(<ResponseViewer />);
-             expect(screen.getByRole('textbox', { name: '' })).toHaveValue('MyString');
+             expect(screen.getByRole('textbox')).toHaveValue('MyString');
 
              JSON.stringify = originalStringify;
         });

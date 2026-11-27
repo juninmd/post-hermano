@@ -31,6 +31,7 @@ describe('Edge Cases', () => {
     // Mock FileReader
     const originalFileReader = window.FileReader;
     window.FileReader = class {
+      onload: ((e: any) => void) | null = null;
       readAsText() {
         // trigger onload with null result
         if (this.onload) {

@@ -29,7 +29,7 @@ describe('RequestEditor Gap Extra Tests', () => {
         fireEvent.click(screen.getByText('Body'));
         // Radio is already checked by store state, but ensure visibility
         // Input is type file
-        const fileInput = screen.getAllByPlaceholderText('Key')[0].closest('div')?.parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
 
         const file = new File(['content'], 'test.txt', { type: 'text/plain' });
         // Mock the file input change

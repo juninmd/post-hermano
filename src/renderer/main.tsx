@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import '@juninmd/sonido/styles.css'
 import App from './App'
 import { installNativeApi } from './api/tauriApi'
 

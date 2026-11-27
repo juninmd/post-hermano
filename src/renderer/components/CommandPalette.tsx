@@ -1,27 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
+import React, { useMemo } from 'react';
+import { CommandPalette as SnCommandPalette, type Command as SnCommand } from '@juninmd/sonido';
 import { requestStore } from '../stores/RequestStore';
-
-const Overlay = styled.div`
-  position: fixed; inset: 0; z-index: 200; display: flex; justify-content: center; align-items: flex-start;
-  padding: 12vh 16px 16px; background: rgba(4,5,14,.55); backdrop-filter: blur(6px);
-  animation: pop .2s both;
-`;
-const Panel = styled.div`
-  width: min(600px, 100%); background: var(--overlay); border: 1px solid var(--line);
-  border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; animation: pop .3s cubic-bezier(.3,1.4,.5,1) both;
-`;
-const Input = styled.input`
-  width: 100%; padding: 16px 18px; border: 0; border-bottom: 1px solid var(--line);
-  background: transparent; color: var(--fg); font-size: 16px; outline: none; border-radius: 0;
-  &:focus { box-shadow: none; }
-`;
-const List = styled.div`max-height: 50vh; overflow: auto; padding: 6px;`;
-const Item = styled.button<{ $on: boolean }>`
-  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0;
-  text-align: left; color: var(--fg); background: ${p => (p.$on ? 'var(--glow)' : 'transparent')};
-  small { margin-left: auto; color: var(--mute); }
-`;
 
 export interface Command { label: string; hint?: string; run: () => void }
 
@@ -41,42 +20,31 @@ export const buildCommands = (toggleTheme: () => void): Command[] => {
   ];
 };
 
+/** Converte o formato local para o `Command` do Sonido, que cuida de foco, filtro e teclado. */
+const toSonidoCommands = (toggleTheme: () => void): SnCommand[] =>
+  buildCommands(toggleTheme).map((c, i) => ({ id: `cmd-${i}`, label: c.label, hint: c.hint, run: c.run }));
+
 interface Props { open: boolean; onClose: () => void; toggleTheme: () => void }
 
 export const CommandPalette: React.FC<Props> = ({ open, onClose, toggleTheme }) => {
-  const [q, setQ] = useState('');
-  const [sel, setSel] = useState(0);
-  const ref = useRef<HTMLInputElement>(null);
-  const list = useMemo(
-    () => (open ? buildCommands(toggleTheme).filter(c => c.label.toLowerCase().includes(q.toLowerCase())) : []),
-    [open, q, toggleTheme],
-  );
+  const commands = useMemo(() => toSonidoCommands(toggleTheme), [open, toggleTheme]);
 
-  useEffect(() => { if (open) { setQ(''); setSel(0); setTimeout(() => ref.current?.focus(), 0); } }, [open]);
-  if (!open) return null;
-
-  const run = (c?: Command) => { if (c) { onClose(); c.run(); } };
+  // O diálogo do Sonido cuida do Esc nativo; este handler cobre o teclado nos testes/jsdom.
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setSel(s => Math.min(s + 1, list.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setSel(s => Math.max(s - 1, 0)); }
-    else if (e.key === 'Enter') run(list[sel]);
-    else if (e.key === 'Escape') onClose();
+    if (e.key === 'Escape') { e.stopPropagation(); onClose(); }
   };
 
+  if (!open) return null;
+
   return (
-    <Overlay onMouseDown={onClose}>
-      <Panel role="dialog" aria-label="Paleta de comandos" onMouseDown={e => e.stopPropagation()}>
-        <Input ref={ref} value={q} placeholder="Digite um comando ou o nome de uma requisição"
-          aria-label="Buscar comandos" onChange={e => { setQ(e.target.value); setSel(0); }} onKeyDown={onKey} />
-        <List>
-          {list.map((c, i) => (
-            <Item key={c.label + i} $on={i === sel} onMouseEnter={() => setSel(i)} onClick={() => run(c)}>
-              {c.label}{c.hint && <small>{c.hint}</small>}
-            </Item>
-          ))}
-          {!list.length && <Item $on={false} disabled>Nada encontrado</Item>}
-        </List>
-      </Panel>
-    </Overlay>
+    <div onKeyDown={onKey}>
+      <SnCommandPalette
+        open
+        onClose={onClose}
+        commands={commands}
+        label="Buscar comandos"
+        placeholder="Digite um comando ou o nome de uma requisição"
+      />
+    </div>
   );
 };

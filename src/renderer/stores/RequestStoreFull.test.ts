@@ -11,7 +11,7 @@ window.pingAPI = {
   getFilePath: vi.fn(),
   on: vi.fn(),
   off: vi.fn()
-};
+} as any;
 
 global.alert = vi.fn();
 

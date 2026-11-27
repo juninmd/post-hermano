@@ -3,7 +3,7 @@ import { RequestStore } from './RequestStore';
 
 describe('RequestStore Load Error Handling', () => {
     let store: RequestStore;
-    let consoleSpy;
+    let consoleSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         vi.restoreAllMocks();

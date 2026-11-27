@@ -191,7 +191,7 @@ describe('EnvironmentModal', () => {
     // I can try to find the overlay by clicking "Edit Environment" parent's parent.
 
     // Alternatively, verify that clicking the X button works
-    const closeIcon = screen.getByText('✕');
+    const closeIcon = screen.getByLabelText('Fechar');
     fireEvent.click(closeIcon);
     expect(mockOnClose).toHaveBeenCalled();
   });

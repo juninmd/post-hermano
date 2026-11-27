@@ -27,7 +27,7 @@ describe('Sidebar', () => {
 
     it('should switch between History, Collections and Environments tabs', () => {
         render(<Sidebar />);
-        const buttons = screen.getAllByRole('button');
+        const buttons = screen.getAllByRole('tab');
         const historyTab = buttons.find(b => b.textContent === 'History');
         const collectionsTab = buttons.find(b => b.textContent === 'Collections');
         const envsTab = buttons.find(b => b.textContent === 'Envs');
@@ -98,7 +98,7 @@ describe('Sidebar', () => {
     describe('Collections', () => {
         const renderCollections = () => {
             const utils = render(<Sidebar />);
-            const buttons = screen.getAllByRole('button');
+            const buttons = screen.getAllByRole('tab');
             const collectionsTab = buttons.find(b => b.textContent === 'Collections');
             fireEvent.click(collectionsTab!);
             return utils;
@@ -236,7 +236,7 @@ describe('Sidebar', () => {
     describe('Environments', () => {
         const renderEnvs = () => {
             const utils = render(<Sidebar />);
-            const buttons = screen.getAllByRole('button');
+            const buttons = screen.getAllByRole('tab');
             const envsTab = buttons.find(b => b.textContent === 'Envs');
             fireEvent.click(envsTab!);
             return utils;
@@ -334,7 +334,7 @@ describe('Sidebar', () => {
     describe('Import/Export UI', () => {
         const renderCollections = () => {
             const utils = render(<Sidebar />);
-            const buttons = screen.getAllByRole('button');
+            const buttons = screen.getAllByRole('tab');
             const collectionsTab = buttons.find(b => b.textContent === 'Collections');
             fireEvent.click(collectionsTab!);
             return utils;
@@ -342,7 +342,7 @@ describe('Sidebar', () => {
 
         const renderEnvs = () => {
             const utils = render(<Sidebar />);
-            const buttons = screen.getAllByRole('button');
+            const buttons = screen.getAllByRole('tab');
             const envsTab = buttons.find(b => b.textContent === 'Envs');
             fireEvent.click(envsTab!);
             return utils;

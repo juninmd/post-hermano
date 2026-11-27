@@ -25,6 +25,57 @@ export const GlobalStyle = createGlobalStyle`
     color-scheme: light;
   }
 
+  /*
+   * Ponte Sonido -> tokens Aurora. Sonido lê --sn-*; aqui os valores apontam
+   * para as variáveis que o app já usava, então o acento roxo e as superfícies
+   * de vidro continuam os mesmos. Precisa valer também no tema claro porque
+   * o Sonido define :root[data-theme='light'] com especificidade maior.
+   */
+  :root,
+  :root[data-theme='light'] {
+    --sn-color-bg: var(--bg);
+    --sn-color-surface: var(--overlay);
+    --sn-color-surface-2: var(--surface2);
+    --sn-color-surface-hover: var(--surface3);
+    --sn-color-border: var(--line2);
+    --sn-color-border-soft: var(--line);
+    --sn-color-text: var(--fg);
+    --sn-color-text-dim: var(--mute);
+    --sn-color-text-faint: var(--mute);
+    --sn-color-on-accent: #ffffff;
+    --sn-color-on-danger: #ffffff;
+    --sn-color-accent: var(--accent);
+    --sn-color-accent-2: var(--accent2);
+    --sn-color-aqua: var(--accent2);
+    --sn-color-gold: var(--warn);
+    --sn-color-success: var(--ok);
+    --sn-color-warning: var(--warn);
+    --sn-color-danger: var(--err);
+    --sn-color-info: var(--get);
+    --sn-gradient: linear-gradient(135deg, var(--accent), #5b8cff);
+    --sn-sig-1: var(--accent);
+    --sn-sig-2: var(--accent2);
+    --sn-sig-3: #5b8cff;
+    --sn-gradient-signature: linear-gradient(115deg, var(--accent) 0%, #5b8cff 55%, var(--accent2) 100%);
+    --sn-gradient-soft: linear-gradient(135deg, var(--glow), transparent);
+    --sn-glass: var(--surface);
+    --sn-glass-strong: var(--overlay);
+    --sn-glass-edge: var(--line);
+    --sn-scrim: rgba(4, 5, 14, 0.55);
+    --sn-font: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --sn-font-display: var(--sn-font);
+    --sn-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    --sn-radius-sm: 8px;
+    --sn-radius: 10px;
+    --sn-radius-lg: 16px;
+    --sn-shadow-card: var(--shadow);
+    --sn-shadow-pop: var(--shadow);
+    --sn-shadow-lift: var(--shadow);
+    --sn-shadow-glow: 0 6px 20px var(--glow);
+    --sn-ring: 0 0 0 3px var(--glow);
+    --sn-blur: 18px;
+  }
+
   :root {
     font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
     font-size: 14px; line-height: 1.5; font-weight: 400;

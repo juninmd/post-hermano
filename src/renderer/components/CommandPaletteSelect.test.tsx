@@ -1,8 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { CommandPalette } from './CommandPalette';
-import { Select } from './Select';
 
 describe('CommandPalette', () => {
   it('filters commands and closes on Escape', () => {
@@ -29,28 +28,4 @@ describe('CommandPalette', () => {
   });
 });
 
-describe('Select', () => {
-  const setup = (onChange = vi.fn()) => {
-    render(<Select value="a" onChange={onChange} label="Letra"><option value="a">A</option><option value="b">B</option></Select>);
-    return onChange;
-  };
-
-  it('opens the menu and picks an option with the mouse', () => {
-    const onChange = setup();
-    fireEvent.click(screen.getByRole('button', { name: /Letra/ }));
-    fireEvent.click(within(screen.getByRole('listbox')).getByText('B'));
-    expect(onChange).toHaveBeenCalledWith({ target: { value: 'b' } });
-  });
-
-  it('supports keyboard navigation', () => {
-    const onChange = setup();
-    const btn = screen.getByRole('button', { name: /Letra/ });
-    fireEvent.keyDown(btn, { key: 'ArrowDown' });
-    fireEvent.keyDown(btn, { key: 'ArrowDown' });
-    fireEvent.keyDown(btn, { key: 'Enter' });
-    expect(onChange).toHaveBeenCalledWith({ target: { value: 'b' } });
-    fireEvent.keyDown(btn, { key: 'ArrowDown' });
-    fireEvent.keyDown(btn, { key: 'Escape' });
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-  });
-});
+// O Select customizado foi substituído pelo Select nativo do Sonido em RequestEditor.

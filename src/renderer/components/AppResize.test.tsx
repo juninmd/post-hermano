@@ -60,7 +60,7 @@ describe('App Resize', () => {
 
     // Let's rely on `fireEvent` on the handle.
     // We can find the handle by getting the sidebar and taking the next sibling?
-    const sidebar = screen.getByTestId('sidebar').parentElement; // SidebarWrapper
+    const sidebar = screen.getByTestId('sidebar').parentElement?.parentElement; // SidebarWrapper
     const resizeHandle = sidebar?.nextElementSibling;
 
     if (!resizeHandle) throw new Error('Resize handle not found');
@@ -101,7 +101,7 @@ describe('App Resize', () => {
 
   it('should constrain sidebar resizing', () => {
       render(<App />);
-      const sidebar = screen.getByTestId('sidebar').parentElement;
+      const sidebar = screen.getByTestId('sidebar').parentElement?.parentElement;
       const resizeHandle = sidebar?.nextElementSibling!;
 
       fireEvent.mouseDown(resizeHandle, { clientX: 300 });
@@ -148,7 +148,7 @@ describe('App Resize', () => {
 
       render(<App />);
 
-      const sidebar = screen.getByTestId('sidebar').parentElement;
+      const sidebar = screen.getByTestId('sidebar').parentElement?.parentElement;
       expect(sidebar).toHaveStyle({ width: '450px' });
 
       const responseViewer = screen.getByTestId('response-viewer').parentElement;
@@ -157,7 +157,7 @@ describe('App Resize', () => {
 
   it('should not update state if mousemove happens without mousedown', () => {
       render(<App />);
-      const sidebar = screen.getByTestId('sidebar').parentElement;
+      const sidebar = screen.getByTestId('sidebar').parentElement?.parentElement;
 
       fireEvent.mouseMove(window, { clientX: 500 });
       expect(sidebar).toHaveStyle({ width: '300px' }); // Default

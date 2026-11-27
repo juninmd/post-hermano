@@ -17,7 +17,7 @@ window.pingAPI = {
   getFilePath: mockGetFilePath,
   on: vi.fn(),
   off: vi.fn()
-};
+} as any;
 
 // Mock alert/prompt/confirm
 global.alert = vi.fn();

@@ -98,7 +98,7 @@ describe('RequestStore Gap Extra Tests', () => {
         });
 
         const originalTabId = requestStore.activeTabId;
-        requestStore.duplicateTab(originalTabId);
+        requestStore.duplicateTab(originalTabId!);
 
         // New tab is active
         const newTab = requestStore.activeTab;
